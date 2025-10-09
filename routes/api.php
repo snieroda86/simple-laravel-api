@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Models\User;
 use App\Models\Post;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\AuthController;
+
 
 
 // Route::get('/user', function (Request $request) {
@@ -12,3 +14,8 @@ use App\Http\Controllers\PostController;
 // })->middleware('auth:sanctum');
 
 Route::apiResource('posts' , PostController::class );
+
+Route::post('register' , [AuthController::class , 'register']);
+Route::post('login' , [AuthController::class , 'login']);
+Route::post('logout' , [AuthController::class , 'logout'])->middleware('auth:sanctum');
+
