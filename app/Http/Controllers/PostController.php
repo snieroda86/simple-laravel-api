@@ -6,8 +6,13 @@ use Illuminate\Http\Request;
 
 use App\Models\Post;
 
-class PostController extends Controller
+
+class PostController extends Controller 
 {
+    public function __construct() 
+    {
+        $this->middleware('auth:sanctum')->except(['index', 'show']);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -26,17 +31,13 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $fields = $request->validate([
             'title' => 'required|string|max:512',
             'body'  => 'required|string',
         ]);
 
 
-        $post = Post::create([
-            'title'   => $request->title,
-            'body'    => $request->body,
-            'user_id' => 3,
-        ]);
+        $post = $request->user()->posts()->create($fields);
 
 
         return response()->json([
