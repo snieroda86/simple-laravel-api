@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Models\Post;
-
+use Illuminate\Support\Facades\Gate;
 
 class PostController extends Controller 
 {
@@ -64,24 +64,23 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
+        $fields = $request->validate([
             'title' => 'required|string|max:512',
             'body'  => 'required|string',
         ]);
 
         $post = Post::findOrFail($id);
 
-        $post->update([
-            'title'   => $validated['title'],
-            'body'    => $validated['body'],
-            'user_id' => 3,
-        ]);
+        Gate::authorize('modify', $post);
+
+        $post->update($fields);
 
         return response()->json([
             'status' => 'success',
-            'data'   => $post, 
-        ], 200);
+            'data'   => $post,
+        ]);
     }
+
 
 
     /**
@@ -89,7 +88,9 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
+
         $post = Post::findOrFail($id);
+        Gate::authorize('modify', $post);
         $post->delete();
 
         return response()->json([
