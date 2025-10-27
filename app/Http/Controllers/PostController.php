@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Post;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller 
 {
@@ -34,10 +35,21 @@ class PostController extends Controller
         $fields = $request->validate([
             'title' => 'required|string|max:512',
             'body'  => 'required|string',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
         ]);
 
+        $image_path = null;
 
-        $post = $request->user()->posts()->create($fields);
+        if($request->hasFile('featured_image')){
+            $image_path = $request->file('featured_image')->store('posts-images');
+        }
+
+
+        $post = $request->user()->posts()->create([
+            'title' => $fields['title'],
+            'body' => $fields['body'],
+            'featured_image' => $image_path
+        ]);
 
 
         return response()->json([

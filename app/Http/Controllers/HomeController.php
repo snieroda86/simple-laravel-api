@@ -6,18 +6,12 @@ use Illuminate\Http\Request;
 
 use App\Services\Calculator;
 
+use App\Models\Post;
+
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth')->except('calc');
-    }
+    
 
     /**
      * Show the application dashboard.
@@ -26,15 +20,12 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $posts = Post::paginate(10);
+        return view('pages.home' , ['posts' => $posts ]);
     }
 
-    public function calc(Calculator $calc)
-    {
-        // return $calc->add(2, 3);
-
-        $cos = app()->make(Calculator::class);
-
-        dd($cos);
+    public function show($id){
+        $post = Post::findOrFail($id);
+        return view('pages.single' , compact('post'));
     }
 }
