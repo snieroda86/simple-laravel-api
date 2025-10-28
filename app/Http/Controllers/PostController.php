@@ -32,20 +32,30 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+       
         $fields = $request->validate([
             'title' => 'required|string|max:512',
             'body'  => 'required|string',
-            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
         ]);
 
-        $image_path = null;
+       
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
 
-        if($request->hasFile('featured_image')){
+        $image_path = null;
+        if ($request->hasFile('featured_image')) {
+           
             $image_path = $request->file('featured_image')->store('posts-images');
         }
 
-
-        $post = $request->user()->posts()->create([
+      
+        $post = $user->posts()->create([
             'title' => $fields['title'],
             'body' => $fields['body'],
             'featured_image' => $image_path
@@ -54,7 +64,8 @@ class PostController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $post,
+            'message' => 'Post created successfully',
+            'data' => $post
         ], 201);
     }
 
@@ -65,6 +76,14 @@ class PostController extends Controller
     public function show(string $id)
     {
         $post = Post::find($id);
+
+        if (!$post) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Post not found'
+            ], 404);
+        }
+
         return response()->json([
             'status' => 'success',
             'data' => $post
@@ -76,16 +95,33 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
+
+
         $fields = $request->validate([
-            'title' => 'required|string|max:512',
-            'body'  => 'required|string',
+            'title' => 'nullable|string|max:512',
+            'body'  => 'nullable|string',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
         ]);
 
         $post = Post::findOrFail($id);
 
         Gate::authorize('modify', $post);
 
-        $post->update($fields);
+
+        if($request->hasFile('featured_image')){
+            if ($post->featured_image && Storage::exists($post->featured_image)) {
+                Storage::delete($post->featured_image);
+            }
+            $image_path = $request->file('featured_image')->store('posts-images');
+        }else{
+            $image_path = $post->featured_image;
+        }
+
+        $post->update([
+            'title' => $fields['title'] ?? $post->title ,
+            'body' => $fields['body'] ?? $post->body ,
+            'featured_image' => $image_path
+        ]);
 
         return response()->json([
             'status' => 'success',
@@ -100,15 +136,19 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-
         $post = Post::findOrFail($id);
         Gate::authorize('modify', $post);
+
+        if ($post->featured_image && Storage::exists($post->featured_image)) {
+            Storage::delete($post->featured_image);
+        }
+
         $post->delete();
 
         return response()->json([
             'status' => 'success',
-            'message'   => 'Post with id '.$post->id.' deleted successfully'
+            'message' => 'Post deleted successfully'
         ], 200);
-
     }
+
 }
