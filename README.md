@@ -47,8 +47,8 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan serve
-
---
+```
+---
 
 ## Configuration
 
@@ -56,10 +56,13 @@ php artisan serve
 
 ```bash
 cp .env.example .env
+```
 
 #### Update your database credentials:
 
+```env
 DB_DATABASE=laravel_api
 DB_USERNAME=root
 DB_PASSWORD=
+```
 
